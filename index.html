@@ -527,6 +527,16 @@
                     input.dataset.row = i;
                     input.dataset.col = j;
                     input.id = `matrix-input-${i}-${j}`;
+                    input.addEventListener('focus', function() {
+                        if (this.value === '0') {
+                            this.value = '';
+                        }
+                    });
+                    input.addEventListener('blur', function() {
+                        if (this.value === '') {
+                            this.value = '0';
+                        }
+                    });
                     gridElement.appendChild(input);
                 }
             }
