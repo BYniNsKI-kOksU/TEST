@@ -33,40 +33,43 @@
         }
 
         .header {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    margin-bottom: 20px;
-    width: 100%;
-}
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
 
-.title {
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
-    grid-column: 2;
-}
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            grid-column: 2;
+        }
 
-.lang-btn {
-    grid-column: 3;
-    justify-self: end;
-    /* reszta stylów pozostaje bez zmian */
-}
+        .lang-btn {
+            grid-column: 3;
+            justify-self: end;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
 
         .lang-btn:hover {
             background-color: #cccccc;
+            border-radius: 50%;
         }
 
         .lang-menu {
-            position: absolute;
-            top: 50px;
-            right: 10px;
+            position: fixed;
             background-color: white;
             border-radius: 5px;
             padding: 10px;
             width: 120px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            z-index: 100;
+            z-index: 1000;
             display: none;
         }
 
@@ -126,7 +129,7 @@
             background-color: white;
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            z-index: 10;
+            z-index: 1000;
             display: none;
             width: 100%;
         }
@@ -228,16 +231,14 @@
         }
 
         .size-menu {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
             background-color: var(--clr-matrix-bg);
             border: 1px solid var(--clr-matrix-border);
             border-radius: 5px;
             padding: 10px;
-            z-index: 10;
+            z-index: 1000;
             display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .size-control {
@@ -318,6 +319,15 @@
             .matrix-frame {
                 min-width: 150px;
                 flex-shrink: 0;
+                background-color: transparent;
+                border: none;
+            }
+            
+            .matrix-grid {
+                background-color: var(--clr-matrix-bg);
+                border: 1px solid var(--clr-matrix-border);
+                border-radius: 5px;
+                padding: 10px;
             }
             
             .method-selector {
@@ -328,6 +338,13 @@
             .method-btn {
                 width: 100%;
                 margin: 2px 0;
+            }
+            
+            .size-menu {
+                left: 50% !important;
+                transform: translateX(-50%);
+                top: auto !important;
+                bottom: 20px;
             }
         }
     </style>
@@ -366,7 +383,7 @@
             </div>
         </div>
 
-        <div class="matrices-container">
+        <div class="matrices-container" id="matricesContainer">
             <div class="matrix-frame" id="matrixA">
                 <div class="matrix-title" id="matrixATitle">Macierz A</div>
                 <div class="matrix-grid" id="matrixAGrid"></div>
@@ -393,7 +410,7 @@
                     </div>
                     <div class="size-control">
                         <span class="size-label" id="colsBLabel">Kolumny:</span>
-                        <input type="number" class="size-input" id="colsB" min="1" max="10" value="2">
+                        <input type="number" class="size-input" id="colsB" min="1" max="10" value="2" disabled>
                     </div>
                     <button class="accept-btn" id="acceptB">Akceptuj</button>
                 </div>
@@ -508,6 +525,7 @@
         const acceptB = document.getElementById('acceptB');
         const resultBox = document.getElementById('resultBox');
         const solutionBox = document.getElementById('solutionBox');
+        const matricesContainer = document.getElementById('matricesContainer');
 
         // Inicjalizacja macierzy
         function createMatrix(gridElement, rows, cols) {
@@ -544,52 +562,53 @@
 
         // Pobierz wartości z macierzy
         function getMatrixValues(gridElement) {
-            if (!gridElement) {
-                throw new Error("Element macierzy nie istnieje!");
+    if (!gridElement) {
+        throw new Error("Element macierzy nie istnieje!");
+    }
+
+    const inputs = gridElement.querySelectorAll('.matrix-input');
+    if (inputs.length === 0) {
+        throw new Error("Brak pól input w macierzy!");
+    }
+
+    // Rzetelne obliczanie liczby kolumn
+    const styleCols = gridElement.style.gridTemplateColumns;
+    const cols = (styleCols.match(/repeat\((\d+)/) || [])[1] ? parseInt(styleCols.match(/repeat\((\d+)/)[1]) : 1;
+    const rows = inputs.length / cols;
+
+    const matrix = [];
+    for (let i = 0; i < rows; i++) {
+        const row = [];
+        for (let j = 0; j < cols; j++) {
+            const input = gridElement.querySelector(`[data-row="${i}"][data-col="${j}"]`) || 
+                         document.getElementById(`matrix-input-${i}-${j}`);
+
+            if (!input) {
+                throw new Error(`Nie znaleziono inputa (wiersz ${i}, kolumna ${j}).`);
             }
 
-            const inputs = gridElement.querySelectorAll('.matrix-input');
-            if (inputs.length === 0) {
-                throw new Error("Brak pól input w macierzy!");
+            const value = parseFloat(input.value);
+            if (isNaN(value)) {
+                throw new Error(translations[currentLang].errors.invalid
+                    .replace('{r}', i + 1)
+                    .replace('{c}', j + 1));
             }
-            
-            const cols = parseInt(gridElement.style.gridTemplateColumns.split(' ').length) || 2;
-            const rows = inputs.length / cols;
-            const matrix = [];
-            
-            for (let i = 0; i < rows; i++) {
-                const row = [];
-                for (let j = 0; j < cols; j++) {
-                    const input = gridElement.querySelector(`[data-row="${i}"][data-col="${j}"]`) || 
-                                 document.getElementById(`matrix-input-${i}-${j}`);
-                    
-                    if (!input) {
-                        console.error(`Szukany input: wiersz ${i}, kolumna ${j}`);
-                        console.error('Dostępne inputy:', inputs);
-                        throw new Error(`Nie znaleziono inputa (wiersz ${i}, kolumna ${j}). Liczba inputów: ${inputs.length}`);
-                    }
-                    
-                    const value = parseFloat(input.value);
-                    if (isNaN(value)) {
-                        throw new Error(translations[currentLang].errors.invalid
-                            .replace('{r}', i+1)
-                            .replace('{c}', j+1));
-                    }
-                    row.push(value);
-                }
-                matrix.push(row);
-            }
-            
-            // Dodatkowa walidacja dla układu równań
-            if (currentOperation === 'solve' && gridElement === matrixBGrid) {
-                const isVector = matrix.every(row => row.length === 1);
-                if (!isVector) {
-                    console.warn('Macierz B nie jest wektorem:', matrix);
-                }
-            }
-            
-            return matrix;
+            row.push(value);
         }
+        matrix.push(row);
+    }
+
+    // Walidacja specjalna dla B w operacji "solve"
+    if (currentOperation === 'solve' && gridElement === matrixBGrid) {
+        if (cols !== 1) {
+            console.error("Macierz B ma więcej niż 1 kolumnę:", matrix);
+            throw new Error(translations[currentLang].errors.solve_dim);
+        }
+    }
+
+    return matrix;
+}
+
 
         // Zmień język
         function switchLanguage(lang) {
@@ -653,10 +672,43 @@
 
         // Zmień operację
         function changeOperation(operation) {
-            currentOperation = operation;
-            operationBtn.textContent = translations[currentLang].operations[operation];
-            adjustMatrixB();
-            updateUI();
+    currentOperation = operation;
+    operationBtn.textContent = translations[currentLang].operations[operation];
+    
+    // Specjalna obsługa układu równań
+    if (operation === 'solve') {
+        const rowsA = matrixAGrid.children.length / 
+                     parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
+        const colsA = parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
+        
+        // Wymuszamy macierz kwadratową dla A
+        if (rowsA !== colsA) {
+            createMatrix(matrixAGrid, rowsA, rowsA);
+        }
+        
+        // Wymuszamy wektor dla B
+        createMatrix(matrixBGrid, rowsA, 1);
+        document.getElementById('rowsB').value = rowsA;
+        document.getElementById('colsB').value = 1;
+        document.getElementById('colsB').disabled = true;
+    }
+    
+    adjustMatrixB();
+    updateUI();
+    centerMatrices();
+}
+
+        // Wyśrodkuj macierze w kontenerze
+        function centerMatrices() {
+            if (currentOperation === 'solve' || currentOperation === 'add' || currentOperation === 'sub' || currentOperation === 'mul') {
+                matricesContainer.style.justifyContent = 'center';
+            } else {
+                matricesContainer.style.justifyContent = 'center';
+                // Jeśli tylko jedna macierz jest widoczna, wyśrodkuj ją
+                if (getComputedStyle(matrixB).display === 'none') {
+                    matricesContainer.style.justifyContent = 'center';
+                }
+            }
         }
 
         // Dostosuj macierz B w zależności od operacji
@@ -668,18 +720,14 @@
             
             if (currentOperation === 'solve') {
                 // Dla układu równań, macierz B ma tyle wierszy co A i 1 kolumnę
-                const rows = parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
-                
-                // Aktualizacja UI
+                const cols = (matrixAGrid.style.gridTemplateColumns?.split(' ') || []).length || 2;
+                const rows = matrixAGrid.children.length / cols;
+                createMatrix(matrixBGrid, rows, 1);
                 document.getElementById('rowsB').value = rows;
                 document.getElementById('colsB').value = 1;
                 colsBInput.disabled = true;
-                
-                // Przebudowa macierzy B
-                createMatrix(matrixBGrid, rows, 1);
                 matrixBFrame.style.display = 'block';
                 
-                console.log('Macierz B dostosowana do układu równań:', rows, 'wierszy, 1 kolumna');
             } else if (['add', 'sub', 'mul'].includes(currentOperation)) {
                 // Dla operacji wymagających dwóch macierzy
                 const rows = parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
@@ -1018,6 +1066,38 @@
             }
         }
 
+        // Pokaż/ukryj menu rozmiaru macierzy
+        function toggleSizeMenu(matrix, menu) {
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+                return;
+            }
+            
+            // Ukryj wszystkie inne menu
+            document.querySelectorAll('.size-menu').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // Pokaż aktualne menu
+            const rect = matrix.getBoundingClientRect();
+            menu.style.left = `${rect.left + window.scrollX}px`;
+            
+            if (window.innerWidth <= 600) {
+                // Na telefonie - menu na dole ekranu
+                menu.style.top = 'auto';
+                menu.style.bottom = '20px';
+                menu.style.left = '50%';
+                menu.style.transform = 'translateX(-50%)';
+            } else {
+                // Na desktopie - menu pod macierzą
+                menu.style.top = `${rect.bottom + window.scrollY}px`;
+                menu.style.bottom = 'auto';
+                menu.style.transform = 'none';
+            }
+            
+            menu.style.display = 'block';
+        }
+
         // Inicjalizacja
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -1041,6 +1121,7 @@
                 }
                 
                 updateUI();
+                centerMatrices();
                 
                 // Obsługa przycisku języka
                 langBtn.addEventListener('click', (e) => {
@@ -1092,16 +1173,14 @@
                 // Obsługa zmiany rozmiaru macierzy A
                 matrixA.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    sizeMenuA.style.display = 'block';
-                    sizeMenuB.style.display = 'none';
+                    toggleSizeMenu(matrixA, sizeMenuA);
                 });
                 
                 // Obsługa zmiany rozmiaru macierzy B
                 matrixB.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (getComputedStyle(matrixB).display !== 'none') {
-                        sizeMenuB.style.display = 'block';
-                        sizeMenuA.style.display = 'none';
+                        toggleSizeMenu(matrixB, sizeMenuB);
                         
                         // Dla układu równań, kolumny są zawsze 1
                         if (currentOperation === 'solve') {
@@ -1117,24 +1196,37 @@
                 acceptA.addEventListener('click', () => {
                     const rows = parseInt(rowsA.value);
                     const cols = parseInt(colsA.value);
+    
+                if (currentOperation === 'solve') {
+                    if (rows !== cols) {
+                    alert(translations[currentLang].errors.square);
+                    return;
+                    }
+                    // Zawsze 1 kolumna w B
+                    createMatrix(matrixBGrid, rows, 1);
+                    document.getElementById('rowsB').value = rows;
+                    document.getElementById('colsB').value = 1;
+                    document.getElementById('colsB').disabled = true;
+                }
+    
                     createMatrix(matrixAGrid, rows, cols);
                     sizeMenuA.style.display = 'none';
-                    
-                    // Dostosuj macierz B jeśli potrzeba
-                    adjustMatrixB();
                 });
                 
                 // Akceptacja nowego rozmiaru macierzy B
                 acceptB.addEventListener('click', () => {
                     const rows = parseInt(rowsB.value);
-                    const cols = currentOperation === 'solve' ? 1 : parseInt(colsB.value);
-                    
-                    if (currentOperation === 'solve' && cols !== 1) {
-                        alert(translations[currentLang].errors.solve_dim);
-                        document.getElementById('colsB').value = 1;
-                        return;
+                    let cols = parseInt(colsB.value);
+                    if (currentOperation === 'solve') {
+                        cols = 1; // wymuszamy 1 kolumnę
                     }
-                    
+    
+                    if (currentOperation === 'solve' && cols !== 1) {
+                    alert(translations[currentLang].errors.solve_dim);
+                    document.getElementById('colsB').value = 1;
+                    return;
+                    }
+    
                     createMatrix(matrixBGrid, rows, cols);
                     sizeMenuB.style.display = 'none';
                 });
