@@ -239,6 +239,16 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 14px;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            appearance: textfield;
+            margin: 0;
+        }
+
+        .matrix-input::-webkit-outer-spin-button,
+        .matrix-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .size-menu {
@@ -552,11 +562,13 @@
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
                     const input = document.createElement('input');
-                    input.type = 'text';
+                    input.type = 'number';
                     input.className = 'matrix-input';
                     input.value = '0';
                     input.dataset.row = i;
                     input.dataset.col = j;
+                    input.inputmode = 'decimal';
+                    input.pattern = '[0-9]*';
                     input.id = `matrix-input-${i}-${j}`;
                     input.addEventListener('focus', function() {
                         if (this.value === '0') {
