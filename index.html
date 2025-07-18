@@ -16,6 +16,8 @@
             --clr-lang: #4BB5A8;
             --clr-matrix-bg: #f8f9fa;
             --clr-matrix-border: #dee2e6;
+            --clr-prz: #E07A5F;
+            --clr-fg-his: #F0EFEF;
         }
 
         body {
@@ -47,14 +49,16 @@
             grid-column: 2;
         }
 
+        /* Przycisk języka - oryginalny z KM.html */
         .lang-btn {
-            grid-column: 3;
-            justify-self: end;
             background: none;
             border: none;
             font-size: 24px;
             cursor: pointer;
             padding: 5px;
+            transition: all 0.3s;
+            grid-column: 3;
+            justify-self: end;
         }
 
         .lang-btn:hover {
@@ -62,27 +66,34 @@
             border-radius: 50%;
         }
 
+        /* Menu języka - styl z BRP_2.0 */
         .lang-menu {
-            position: fixed;
-            background-color: white;
-            border-radius: 5px;
-            padding: 10px;
-            width: 120px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            z-index: 1000;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--clr-fg-his);
+            color: var(--clr-prz);
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font: bold 10px/1 Arial;
             display: none;
+            z-index: 1000;
         }
 
-        .lang-menu-item {
-            padding: 5px 0;
-            color: var(--clr-fg-en);
+        .lang-menu div {
+            padding: 6px 12px;
             cursor: pointer;
-            text-align: center;
-            transition: color 0.3s;
         }
 
-        .lang-menu-item:hover {
-            color: var(--clr-accent);
+        .lang-menu div:hover {
+            background: #D7E9E6;
+            color: #000;
+        }
+
+        @media (max-width: 600px) {
+            .lang-menu {
+                right: 10px;
+            }
         }
 
         .controls {
@@ -353,11 +364,13 @@
     <div class="container">
         <div class="header">
             <div class="title" id="title">Kalkulator Macierzy</div>
-            <button class="lang-btn" id="langBtn">🌐</button>
+            <div style="position:relative; grid-column:3; justify-self:end;">
+                <button class="lang-btn" id="langBtn">🌐</button>
             <div class="lang-menu" id="langMenu">
-                <div class="lang-menu-item" data-lang="pl">Polski</div>
-                <div class="lang-menu-item" data-lang="en">English</div>
+                <div data-lang="pl">Polski PL</div>
+                <div data-lang="en">English GB</div>
             </div>
+        </div>
         </div>
 
         <div class="controls">
@@ -562,58 +575,60 @@
 
         // Pobierz wartości z macierzy
         function getMatrixValues(gridElement) {
-    if (!gridElement) {
-        throw new Error("Element macierzy nie istnieje!");
-    }
-
-    const inputs = gridElement.querySelectorAll('.matrix-input');
-    if (inputs.length === 0) {
-        throw new Error("Brak pól input w macierzy!");
-    }
-
-    // Rzetelne obliczanie liczby kolumn
-    const styleCols = gridElement.style.gridTemplateColumns;
-    const cols = (styleCols.match(/repeat\((\d+)/) || [])[1] ? parseInt(styleCols.match(/repeat\((\d+)/)[1]) : 1;
-    const rows = inputs.length / cols;
-
-    const matrix = [];
-    for (let i = 0; i < rows; i++) {
-        const row = [];
-        for (let j = 0; j < cols; j++) {
-            const input = gridElement.querySelector(`[data-row="${i}"][data-col="${j}"]`) || 
-                         document.getElementById(`matrix-input-${i}-${j}`);
-
-            if (!input) {
-                throw new Error(`Nie znaleziono inputa (wiersz ${i}, kolumna ${j}).`);
+            if (!gridElement) {
+                throw new Error("Element macierzy nie istnieje!");
             }
 
-            const value = parseFloat(input.value);
-            if (isNaN(value)) {
-                throw new Error(translations[currentLang].errors.invalid
-                    .replace('{r}', i + 1)
-                    .replace('{c}', j + 1));
+            const inputs = gridElement.querySelectorAll('.matrix-input');
+            if (inputs.length === 0) {
+                throw new Error("Brak pól input w macierzy!");
             }
-            row.push(value);
-        }
-        matrix.push(row);
-    }
 
-    // Walidacja specjalna dla B w operacji "solve"
-    if (currentOperation === 'solve' && gridElement === matrixBGrid) {
-        if (cols !== 1) {
-            console.error("Macierz B ma więcej niż 1 kolumnę:", matrix);
-            throw new Error(translations[currentLang].errors.solve_dim);
-        }
-    }
+            // Rzetelne obliczanie liczby kolumn
+            const styleCols = gridElement.style.gridTemplateColumns;
+            const cols = (styleCols.match(/repeat\((\d+)/) || [])[1] ? parseInt(styleCols.match(/repeat\((\d+)/)[1]) : 1;
+            const rows = inputs.length / cols;
 
-    return matrix;
-}
+            const matrix = [];
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                for (let j = 0; j < cols; j++) {
+                    const input = gridElement.querySelector(`[data-row="${i}"][data-col="${j}"]`) || 
+                    document.getElementById(`matrix-input-${i}-${j}`);
+
+                    if (!input) {
+                        throw new Error(`Nie znaleziono inputa (wiersz ${i}, kolumna ${j}).`);
+                    }
+
+                    const value = parseFloat(input.value);
+                    if (isNaN(value)) {
+                        throw new Error(translations[currentLang].errors.invalid
+                            .replace('{r}', i + 1)
+                            .replace('{c}', j + 1));
+                    }
+                    row.push(value);
+                }
+                matrix.push(row);
+            }
+
+            // Walidacja specjalna dla B w operacji "solve"
+            if (currentOperation === 'solve' && gridElement === matrixBGrid) {
+            if (cols !== 1) {
+                    console.error("Macierz B ma więcej niż 1 kolumnę:", matrix);
+                    throw new Error(translations[currentLang].errors.solve_dim);
+                }
+            }
+
+            return matrix;
+        }
 
 
         // Zmień język
-        function switchLanguage(lang) {
-            currentLang = lang;
+        function switchLanguage(code) {
+            currentLang = code;
             updateUI();
+            document.title = translations[code].title;
+            langMenu.style.display = "none";
         }
 
         // Aktualizuj UI po zmianie języka
@@ -672,31 +687,31 @@
 
         // Zmień operację
         function changeOperation(operation) {
-    currentOperation = operation;
-    operationBtn.textContent = translations[currentLang].operations[operation];
+            currentOperation = operation;
+            operationBtn.textContent = translations[currentLang].operations[operation];
     
-    // Specjalna obsługa układu równań
-    if (operation === 'solve') {
-        const rowsA = matrixAGrid.children.length / 
-                     parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
-        const colsA = parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
+            // Specjalna obsługa układu równań
+            if (operation === 'solve') {
+                const rowsA = matrixAGrid.children.length / 
+                parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
+                const colsA = parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
         
-        // Wymuszamy macierz kwadratową dla A
-        if (rowsA !== colsA) {
-            createMatrix(matrixAGrid, rowsA, rowsA);
+                // Wymuszamy macierz kwadratową dla A
+                if (rowsA !== colsA) {
+                    createMatrix(matrixAGrid, rowsA, rowsA);
+                }
+        
+                // Wymuszamy wektor dla B
+                createMatrix(matrixBGrid, rowsA, 1);
+                document.getElementById('rowsB').value = rowsA;
+                document.getElementById('colsB').value = 1;
+                document.getElementById('colsB').disabled = true;
+            }
+    
+            adjustMatrixB();
+            updateUI();
+            centerMatrices();
         }
-        
-        // Wymuszamy wektor dla B
-        createMatrix(matrixBGrid, rowsA, 1);
-        document.getElementById('rowsB').value = rowsA;
-        document.getElementById('colsB').value = 1;
-        document.getElementById('colsB').disabled = true;
-    }
-    
-    adjustMatrixB();
-    updateUI();
-    centerMatrices();
-}
 
         // Wyśrodkuj macierze w kontenerze
         function centerMatrices() {
@@ -1129,14 +1144,6 @@
                     langMenu.style.display = langMenu.style.display === 'block' ? 'none' : 'block';
                 });
                 
-                // Obsługa wyboru języka
-                document.querySelectorAll('.lang-menu-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        switchLanguage(item.dataset.lang);
-                        langMenu.style.display = 'none';
-                    });
-                });
-                
                 // Obsługa przycisku operacji
                 operationBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1153,15 +1160,20 @@
                 
                 // Obsługa kliknięcia poza menu
                 document.addEventListener('click', () => {
-                    langMenu.style.display = 'none';
-                    operationMenu.style.display = 'none';
                     sizeMenuA.style.display = 'none';
                     sizeMenuB.style.display = 'none';
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!langMenu.contains(e.target) && e.target !== langBtn) {
+                        langMenu.style.display = 'none';
+                    }
                 });
                 
                 // Zapobiegaj propagacji kliknięć w menu
                 [langMenu, operationMenu, sizeMenuA, sizeMenuB].forEach(menu => {
                     menu.addEventListener('click', (e) => {
+                        if (e.target.dataset.lang) switchLanguage(e.target.dataset.lang);
                         e.stopPropagation();
                     });
                 });
