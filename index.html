@@ -277,6 +277,16 @@
             padding: 5px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            text-align: center;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .size-input::-webkit-outer-spin-button,
+        .size-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .accept-btn {
@@ -360,10 +370,14 @@
             }
             
             .size-menu {
+                position: fixed;
                 left: 50% !important;
                 transform: translateX(-50%);
-                top: auto !important;
                 bottom: 20px;
+                top: auto !important;
+                width: 80%;
+                max-width: 250px;
+                z-index: 1000;
             }
         }
     </style>
@@ -411,11 +425,11 @@
                 <div class="size-menu" id="sizeMenuA">
                     <div class="size-control">
                         <span class="size-label" id="rowsALabel">Wiersze:</span>
-                        <input type="number" class="size-input" id="rowsA" min="1" max="10" value="2">
+                        <input type="number" class="size-input" id="rowsA" min="1" max="10" value="2" inputmode="numeric">
                     </div>
                     <div class="size-control">
                         <span class="size-label" id="colsALabel">Kolumny:</span>
-                        <input type="number" class="size-input" id="colsA" min="1" max="10" value="2">
+                        <input type="number" class="size-input" id="colsA" min="1" max="10" value="2" inputmode="numeric">
                     </div>
                     <button class="accept-btn" id="acceptA">Akceptuj</button>
                 </div>
@@ -1127,6 +1141,17 @@
                 if (!matrixAGrid || !matrixBGrid) {
                     throw new Error("Brak kontenerów macierzy w DOM");
                 }
+
+                document.querySelectorAll('.size-input').forEach(input => {
+                    input.addEventListener('focus', function() {
+                        this.value = '';
+                    });
+                    input.addEventListener('blur', function() {
+                        if (this.value === '' || isNaN(this.value)) {
+                            this.value = this.min || '2';
+                        }
+                    });
+                });
 
                 // Inicjalizuj macierze
                 createMatrix(matrixAGrid, 2, 2);
