@@ -49,7 +49,6 @@
             grid-column: 2;
         }
 
-        /* Przycisk języka - oryginalny z KM.html */
         .lang-btn {
             background: none;
             border: none;
@@ -66,7 +65,6 @@
             border-radius: 50%;
         }
 
-        /* Menu języka - styl z BRP_2.0 */
         .lang-menu {
             position: absolute;
             top: 100%;
@@ -705,15 +703,8 @@
             // Specjalna obsługa układu równań
             if (operation === 'solve') {
                 const rowsA = matrixAGrid.children.length / 
-                parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
-                const colsA = parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
-        
-                // Wymuszamy macierz kwadratową dla A
-                if (rowsA !== colsA) {
-                    createMatrix(matrixAGrid, rowsA, rowsA);
-                }
-        
-                // Wymuszamy wektor dla B
+                    parseInt(matrixAGrid.style.gridTemplateColumns?.split(' ').length) || 2;
+                // Usuwamy sprawdzanie kwadratowości - zostawiamy tylko dostosowanie B
                 createMatrix(matrixBGrid, rowsA, 1);
                 document.getElementById('rowsB').value = rowsA;
                 document.getElementById('colsB').value = 1;
@@ -1041,6 +1032,10 @@
                     else if (currentOperation === 'solve') {
                         // Sprawdzenie czy macierz B jest wektorem kolumnowym
                         const isVector = matrixBValues.every(row => row.length === 1);
+
+                        if (matrixAValues.length !== matrixAValues[0].length) {
+                            throw new Error(translations[currentLang].errors.square);
+                        }
                         
                         if (!isVector) {
                             console.error('Nieprawidłowy format macierzy B:', matrixBValues);
@@ -1222,20 +1217,15 @@
                 acceptA.addEventListener('click', () => {
                     const rows = parseInt(rowsA.value);
                     const cols = parseInt(colsA.value);
+                    createMatrix(matrixAGrid, rows, cols);
     
                 if (currentOperation === 'solve') {
-                    if (rows !== cols) {
-                    alert(translations[currentLang].errors.square);
-                    return;
-                    }
-                    // Zawsze 1 kolumna w B
                     createMatrix(matrixBGrid, rows, 1);
                     document.getElementById('rowsB').value = rows;
                     document.getElementById('colsB').value = 1;
                     document.getElementById('colsB').disabled = true;
                 }
     
-                    createMatrix(matrixAGrid, rows, cols);
                     sizeMenuA.style.display = 'none';
                 });
                 
@@ -1243,8 +1233,10 @@
                 acceptB.addEventListener('click', () => {
                     const rows = parseInt(rowsB.value);
                     let cols = parseInt(colsB.value);
+
                     if (currentOperation === 'solve') {
-                        cols = 1; // wymuszamy 1 kolumnę
+                        cols = 1;
+                        document.getElementById('colsB').value = 1;
                     }
     
                     if (currentOperation === 'solve' && cols !== 1) {
