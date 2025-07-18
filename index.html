@@ -1164,6 +1164,7 @@
                 
                 // Obsługa wyboru operacji
                 operationMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     if (e.target.classList.contains('operation-menu-item')) {
                         changeOperation(e.target.dataset.op);
                         operationMenu.style.display = 'none';
@@ -1174,6 +1175,7 @@
                 document.addEventListener('click', () => {
                     sizeMenuA.style.display = 'none';
                     sizeMenuB.style.display = 'none';
+                    operationMenu.style.display = 'none';
                 });
 
                 document.addEventListener('click', (e) => {
